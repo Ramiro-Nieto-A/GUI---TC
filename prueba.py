@@ -1,11 +1,12 @@
 import sys
 from PyQt5 import QtWidgets, uic
-from PyQt5.QtWidgets import QFileDialog, QColorDialog, QDoubleSpinBox, QVBoxLayout, QHBoxLayout, QWidget, QPushButton, QLabel, QFormLayout, QSplitter
+from PyQt5.QtWidgets import QFileDialog, QColorDialog, QDoubleSpinBox, QVBoxLayout, QHBoxLayout, QWidget, QPushButton, QLabel, QFormLayout, QSplitter, QComboBox
 from PyQt5.QtCore import Qt  # Importar Qt desde PyQt5.QtCore
 import pandas as pd
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.ticker import FuncFormatter
+import re
 
 class OscilloscopeApp(QtWidgets.QMainWindow):
     def __init__(self):
@@ -24,8 +25,14 @@ class OscilloscopeApp(QtWidgets.QMainWindow):
         # Crear los botones y añadirlos al layout de botones
         self.load_button = QPushButton("Cargar CSV")
         self.grid_button = QPushButton("Grilla")
+        self.logx_button = QComboBox()
+        self.logx_button.addItems(["Escala X Lineal", "Escala X Logarítmica"])
+        self.logy_button = QComboBox()
+        self.logy_button.addItems(["Escala Y Lineal", "Escala Y Logarítmica"])
         button_layout.addWidget(self.load_button)
         button_layout.addWidget(self.grid_button)
+        button_layout.addWidget(self.logx_button)
+        button_layout.addWidget(self.logy_button)
 
         # Añadir el layout de botones al layout principal
         main_layout.addLayout(button_layout)
@@ -61,6 +68,8 @@ class OscilloscopeApp(QtWidgets.QMainWindow):
         # Conectar los botones a sus funciones
         self.load_button.clicked.connect(self.load_csv)
         self.grid_button.clicked.connect(self.toggle_grid)
+        self.logx_button.currentIndexChanged.connect(self.update_plot)
+        self.logy_button.currentIndexChanged.connect(self.update_plot)
 
         self.scale_vars = {}
         self.offset_vars = {}
@@ -81,7 +90,8 @@ class OscilloscopeApp(QtWidgets.QMainWindow):
         for url in event.mimeData().urls():
             file_path = url.toLocalFile()
             if file_path.endswith('.csv'):
-                data = pd.read_csv(file_path)
+                data = pd.read_csv(file_path, header=[0, 1])
+                data.columns = [' '.join(col).strip() for col in data.columns.values]  # Combinar las dos filas de encabezado
                 self.create_controls(data)
                 self.plot_data(data)
                 break
@@ -126,10 +136,11 @@ class OscilloscopeApp(QtWidgets.QMainWindow):
     def load_csv(self):
         file_path, _ = QFileDialog.getOpenFileName(self, "Cargar CSV", "", "CSV files (*.csv)")
         if file_path:
-            data = pd.read_csv(file_path)
+            data = pd.read_csv(file_path, header=[0, 1])
+            data.columns = [' '.join(col).strip() for col in data.columns.values]  # Combinar las dos filas de encabezado
             self.create_controls(data)
             self.plot_data(data)
-
+    
     def toggle_grid(self):
         if self.current_data is not None:
             self.grid_enabled = not self.grid_enabled
@@ -175,6 +186,17 @@ class OscilloscopeApp(QtWidgets.QMainWindow):
             return f'{x * scale:.2f}'
 
         self.ax.xaxis.set_major_formatter(FuncFormatter(time_formatter))
+
+        # Ajustar la escala de los ejes según las opciones seleccionadas
+        if self.logx_button.currentIndex() == 1:
+            self.ax.set_xscale('log')
+        else:
+            self.ax.set_xscale('linear')
+
+        if self.logy_button.currentIndex() == 1:
+            self.ax.set_yscale('log')
+        else:
+            self.ax.set_yscale('linear')
 
         self.ax.set_xlabel("Tiempo " + unit)
         self.ax.set_ylabel("Amplitud")
