@@ -6,6 +6,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.ticker import FuncFormatter
+import mplcursors
 
 class OscilloscopeApp(QtWidgets.QMainWindow):
     def __init__(self):
@@ -229,6 +230,10 @@ class OscilloscopeApp(QtWidgets.QMainWindow):
         self.ax.set_ylabel("Amplitud")
         self.ax.legend()
         self.ax.grid(self.grid_enabled)
+
+        # Agregar cursores
+        mplcursors.cursor(self.ax, hover=True)
+
         self.canvas.draw()
 
 if __name__ == "__main__":
