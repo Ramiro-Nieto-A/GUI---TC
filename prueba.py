@@ -4,7 +4,7 @@ from PyQt5.QtWidgets import QFileDialog, QColorDialog, QDoubleSpinBox, QVBoxLayo
 from PyQt5.QtCore import Qt
 import pandas as pd
 import matplotlib.pyplot as plt
-from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
+from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas, NavigationToolbar2QT as NavigationToolbar
 from matplotlib.ticker import FuncFormatter
 import mplcursors
 
@@ -45,8 +45,10 @@ class OscilloscopeApp(QtWidgets.QMainWindow):
         self.plot_widget = QWidget()
         self.figure, self.ax = plt.subplots()
         self.canvas = FigureCanvas(self.figure)
+        self.toolbar = NavigationToolbar(self.canvas, self)  # Crear la barra de herramientas
         plot_layout = QVBoxLayout(self.plot_widget)
         plot_layout.addWidget(self.canvas)
+        plot_layout.addWidget(self.toolbar)  # Añadir la barra de herramientas al layout
 
         # Añadir el widget de gráfico al splitter
         self.splitter.addWidget(self.plot_widget)
@@ -79,6 +81,7 @@ class OscilloscopeApp(QtWidgets.QMainWindow):
         self.min_labels = {}  # Inicializar min_labels
         self.current_data = None
         self.grid_enabled = True
+        self.cursors = []  # Inicializar los cursores
         # Habilitar la funcionalidad de arrastrar y soltar
         self.setAcceptDrops(True)
     
@@ -226,18 +229,25 @@ class OscilloscopeApp(QtWidgets.QMainWindow):
         else:
             self.ax.set_yscale('linear')
 
-        self.ax.set_xlabel("Tiempo " + unit)
-        self.ax.set_ylabel("Amplitud")
+        if self.grid_enabled:
+            self.ax.grid(True)
+        else:
+            self.ax.grid(False)
+
+        # Eliminar los cursores antiguos
+        for cursor in self.cursors:
+            cursor.remove()
+        self.cursors.clear()
+
+        # Crear nuevos cursores
+        cursor = mplcursors.cursor(self.ax, hover=True)
+        self.cursors.append(cursor)
+
         self.ax.legend()
-        self.ax.grid(self.grid_enabled)
-
-        # Agregar cursores
-        mplcursors.cursor(self.ax, hover=True)
-
         self.canvas.draw()
 
 if __name__ == "__main__":
     app = QtWidgets.QApplication(sys.argv)
-    osc_app = OscilloscopeApp()
-    osc_app.show()
-    sys.exit(app.exec_())
+    window = OscilloscopeApp()
+    window.show()
+    app.exec_()
