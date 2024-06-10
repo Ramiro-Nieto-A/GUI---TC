@@ -1,22 +1,42 @@
 import matplotlib.pyplot as plt
+import numpy as np
+import matplotlib.patches as patches
 
-# Datos de los puntos
-x = [0]  # Coordenadas x
-y = [0]  # Coordenadas y
-w = [-25000,-25000]
-z = [256986,-256986]
+# Datos de ejemplo
+# x_cero = [0]
+# y_cero = [0]
+x_polo = [-258198.8897]
+y_polo = [0]
+
 
 # Crear el gráfico de dispersión
-plt.figure(figsize=(8, 6))  # Tamaño de la figura
-plt.scatter(x, y, color='blue', marker='o', label='Puntos')  # Representar los puntos
-plt.scatter(w, z, color='red', marker='x', label='Puntos')  # Representar los puntos
+# plt.scatter(x_cero, y_cero, s=100, c='blue', marker='o', label='Ceros')  # Puntos rojos, tamaño 100, marcador circular
+plt.scatter(x_polo, y_polo, s=100, c='red', marker='x', label='Polos')  # Puntos rojos, tamaño 100, marcador circular
 
-# Personalizar el gráfico
-plt.title('Gráfico de dispersión de puntos')
-plt.xlabel('Eje x')
-plt.ylabel('Eje y')
-plt.axhline(0, color='black',linewidth=0.5)  # Añadir línea horizontal en y=0
-plt.axvline(0, color='black',linewidth=0.5)  # Añadir línea vertical en x=0
+
+# Configurar los ejes para que se centren en 0
+plt.axhline(0, color='black', linewidth=0.5)
+plt.axvline(0, color='black', linewidth=0.5)
+
+# Añadir una circunferencia
+circle = patches.Circle((0, 0), radius=20058198.8897, edgecolor='green', facecolor='none', linestyle='dotted')
+plt.gca().add_patch(circle)
+
+# Establecer límites en los ejes para centrar el gráfico en el origen
+plt.xlim(-300000, 300000)
+plt.ylim(-300000, 300000)
+
+# Añadir etiquetas a los ejes
+plt.xlabel('σ')
+plt.ylabel('jω')
 plt.legend()
-plt.grid(True)
-plt.show()  # Mostrar el gráfico
+
+# Título del gráfico
+plt.title('Gráfico de Polos y Ceros')
+# Mostrar los ejes en notación científica
+plt.ticklabel_format(style='sci', axis='both', scilimits=(0,0))
+
+# Mostrar el gráfico
+plt.grid(True)  # Añadir cuadrícula para mejor visualización
+plt.gca().set_aspect('equal', adjustable='box')  # Asegurar que la circunferencia no se deforme
+plt.show()

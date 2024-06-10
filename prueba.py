@@ -5,7 +5,6 @@ from PyQt5.QtCore import Qt
 import pandas as pd
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas, NavigationToolbar2QT as NavigationToolbar
-from matplotlib.ticker import FuncFormatter
 import mplcursors
 
 class OscilloscopeApp(QtWidgets.QMainWindow):
@@ -155,7 +154,7 @@ class OscilloscopeApp(QtWidgets.QMainWindow):
     def load_csv(self):
         file_path, _ = QFileDialog.getOpenFileName(self, "Cargar CSV", "", "CSV files (*.csv)")
         if file_path:
-            data = pd.read_csv(file_path, header=[0, 1])
+            data = pd.read_csv(file_path, header=[0])
             data.columns = [' '.join(col).strip() for col in data.columns.values]  # Combinar las dos filas de encabezado
             self.create_controls(data)
             self.plot_data(data)
@@ -194,30 +193,28 @@ class OscilloscopeApp(QtWidgets.QMainWindow):
             scale_t = 1
             unit = "(s)"
 
-        for canal in canales:
-            scale = self.scale_vars[canal].value()
-            offset = self.offset_vars[canal].value()
-            color = self.colors.get(canal, 'blue')
-            self.ax.plot(data[tiempo]*scale_t, data[canal] * scale + offset, label=canal, color=color)
+        canal=canales[1]
+        scale = self.scale_vars[canal].value()
+        offset = self.offset_vars[canal].value()
+        color = self.colors.get(canal, 'blue')
+        self.ax.plot(data[tiempo]*scale_t, data[canal] * scale + offset, label=canal, color=color)
 
-            max_idx = data[canal].idxmax()
-            min_idx = data[canal].idxmin()
+        max_idx = data[canal].idxmax()
+        min_idx = data[canal].idxmin()
 
-            max_time = data.loc[max_idx, tiempo] * scale_t
-            max_value = data.loc[max_idx, canal] * scale + offset
-            min_time = data.loc[min_idx, tiempo] * scale_t
-            min_value = data.loc[min_idx, canal] * scale + offset
+        max_time = data.loc[max_idx, tiempo] * scale_t
+        max_value = data.loc[max_idx, canal] * scale + offset
+        min_time = data.loc[min_idx, tiempo] * scale_t
+        min_value = data.loc[min_idx, canal] * scale + offset
 
-            self.ax.plot(max_time, max_value, 'ro')  # Punto máximo
-            self.ax.plot(min_time, min_value, 'go')  # Punto mínimo
+        # self.ax.plot(max_time, max_value, 'ro')  # Punto máximo
+        # self.ax.plot(min_time, min_value, 'go')  # Punto mínimo
 
-            self.max_labels[canal].setText(f"Máximo: {max_value:.2f} en {max_time:.2f} {unit}")
-            self.min_labels[canal].setText(f"Mínimo: {min_value:.2f} en {min_time:.2f} {unit}")
+        self.max_labels[canal].setText(f"Máximo: {max_value:.2f} en {max_time:.2f} {unit}")
+        self.min_labels[canal].setText(f"Mínimo: {min_value:.2f} en {min_time:.2f} {unit}")
 
         def time_formatter(x, pos):
             return f'{x * scale:.7f}'
-
-        self.ax.xaxis.set_major_formatter(FuncFormatter(time_formatter))
 
         if self.logx_button.currentIndex() == 1:
             self.ax.set_xscale('log')
@@ -242,7 +239,9 @@ class OscilloscopeApp(QtWidgets.QMainWindow):
         # Crear nuevos cursores
         cursor = mplcursors.cursor(self.ax, hover=True)
         self.cursors.append(cursor)
-
+        self.ax.set_xlabel("Frecuencia (Hz)")
+        self.ax.set_ylabel("|H(f)|(db)")
+        self.ax.legend()
         self.ax.legend()
         self.canvas.draw()
 
