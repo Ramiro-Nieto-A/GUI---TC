@@ -3,17 +3,18 @@ import numpy as np
 
 # Definir la función que queremos graficar
 def f(x):
-    return (37.93207*np.exp(-6500*x))*np.cos(np.radians(110431.5261*x + 88.381407))
+    return (1 * 1e-3 * (0.18) * (-6500) * np.exp(-6500 * x * 1e-6) * np.cos(110240.0651 * x * 1e-6 + 5.04e-3) - 1 * 1e-3 * (0.18) * 110240.0651 * np.exp(-6500 * x * 1e-6) * np.sin(110240.0651 * x * 1e-6 + 5.04e-3))
+
 # Crear un rango de valores para x
-x = np.linspace(0, 0.002, 3000000)  # Crea 400 puntos entre -10 y 10
+x = np.linspace(0, 1000, 3000000)  # Crea 400 puntos entre -10 y 10
 y = f(x)  # Aplica la función a cada valor de x
 
 # Crear la gráfica
 plt.figure(figsize=(8, 6))  # Tamaño de la figura
 plt.plot(x, y, label='$Vl$', color='blue')  # Grafica x contra y
 plt.title('Gráfico de $Vl$')  # Título del gráfico
-plt.xlabel('$tiempo(s)$')  # Etiqueta del eje x
-plt.ylabel('$Vl$')  # Etiqueta del eje y
+plt.xlabel('$tiempo(µs)$')  # Etiqueta del eje x
+plt.ylabel('$V$')  # Etiqueta del eje y
 plt.xscale('linear')
 plt.legend()  # Muestra la leyenda
 plt.grid(True)  # Muestra una cuadrícula

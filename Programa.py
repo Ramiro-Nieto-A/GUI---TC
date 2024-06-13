@@ -1,6 +1,6 @@
 import sys
 from PyQt5 import QtWidgets, uic
-from PyQt5.QtWidgets import QFileDialog, QColorDialog, QDoubleSpinBox, QVBoxLayout, QHBoxLayout, QWidget, QPushButton, QLabel, QFormLayout, QSplitter, QComboBox
+from PyQt5.QtWidgets import QFileDialog, QColorDialog, QDoubleSpinBox, QVBoxLayout, QHBoxLayout, QWidget, QPushButton, QLabel, QFormLayout, QSplitter, QComboBox, QMessageBox
 from PyQt5.QtCore import Qt
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -94,12 +94,15 @@ class OscilloscopeApp(QtWidgets.QMainWindow):
         for url in event.mimeData().urls():
             file_path = url.toLocalFile()
             if file_path.endswith('.csv'):
-                data = pd.read_csv(file_path, header=[0, 1])
-                data.columns = [' '.join(col).strip() for col in data.columns.values]  # Combinar las dos filas de encabezado
-                self.CreateControls(data)
-                self.PlotData(data)
-                break
-
+                    try:
+                        data = pd.read_csv(file_path, header=[0, 1])
+                        data.columns = [' '.join(col).strip() for col in data.columns.values]  # Combinar las dos filas de encabezado
+                        self.CreateControls(data)
+                        self.PlotData(data)
+                    except Exception as e:
+                        self.show_error_message(f"Error al cargar el archivo CSV: {str(e)}")
+                    break
+                    
     def CreateControls(self, data):
         for i in reversed(range(self.controls_tabWidget.count())):
             widget = self.controls_tabWidget.widget(i)
@@ -154,10 +157,13 @@ class OscilloscopeApp(QtWidgets.QMainWindow):
     def LoadCsv(self):
         file_path, _ = QFileDialog.getOpenFileName(self, "Cargar CSV", "", "CSV files (*.csv)")
         if file_path:
-            data = pd.read_csv(file_path, header=[0, 1])
-            data.columns = [' '.join(col).strip() for col in data.columns.values]  # Combinar las dos filas de encabezado
-            self.CreateControls(data)
-            self.PlotData(data)
+            try:
+                data = pd.read_csv(file_path, header=[0, 1])
+                data.columns = [' '.join(col).strip() for col in data.columns.values]  # Combinar las dos filas de encabezado
+                self.CreateControls(data)
+                self.PlotData(data)
+            except Exception as e:
+                self.show_error_message(f"Error al cargar el archivo CSV: {str(e)}")
     
     def ToggleGrid(self):
         if self.current_data is not None:
@@ -237,10 +243,17 @@ class OscilloscopeApp(QtWidgets.QMainWindow):
         cursor = mplcursors.cursor(self.ax, hover=True)
         self.cursors.append(cursor)
         self.ax.set_xlabel("Tiempo " + unit)
-        self.ax.set_ylabel("Amplitud")
+        self.ax.set_ylabel("Amplitud (V)")
         self.ax.legend()
         self.ax.legend()
         self.canvas.draw()
+    
+    def show_error_message(self, message):
+        msg_box = QMessageBox()
+        msg_box.setIcon(QMessageBox.Critical)
+        msg_box.setText(message)
+        msg_box.setWindowTitle("Error")
+        msg_box.exec_()
 
 if __name__ == "__main__":
     app = QtWidgets.QApplication(sys.argv)
